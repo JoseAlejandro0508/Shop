@@ -1,0 +1,80 @@
+{
+  "Settings": {
+    "StoreName": "Nova Market",
+    "WhatsappPhone": "573001112233",
+    "Description": "Cat\u00E1logo configurable con carrito y pedidos por WhatsApp."
+  },
+  "Categories": [
+    {
+      "Id": "cat-1",
+      "Name": "Tecnolog\u00EDa",
+      "Slug": "tecnologia"
+    },
+    {
+      "Id": "cat-2",
+      "Name": "Hogar",
+      "Slug": "hogar"
+    },
+    {
+      "Id": "cat-3",
+      "Name": "Accesorios",
+      "Slug": "accesorios"
+    }
+  ],
+  "Products": [
+    {
+      "Id": "prd-1",
+      "CategoryId": "cat-1",
+      "Name": "Auriculares inal\u00E1mbricos",
+      "Description": "Audio claro, controles t\u00E1ctiles y estuche de carga compacto.",
+      "Price": 129.9,
+      "Stock": 24,
+      "Image": "https://picsum.photos/seed/auriculares/800/600"
+    },
+    {
+      "Id": "prd-2",
+      "CategoryId": "cat-1",
+      "Name": "Teclado mec\u00E1nico",
+      "Description": "Retroiluminaci\u00F3n, switches suaves y dise\u00F1o de alto rendimiento.",
+      "Price": 189.5,
+      "Stock": 15,
+      "Image": "https://picsum.photos/seed/teclado/800/600"
+    },
+    {
+      "Id": "prd-3",
+      "CategoryId": "cat-2",
+      "Name": "L\u00E1mpara minimalista",
+      "Description": "Iluminaci\u00F3n c\u00E1lida para escritorio, sala o habitaci\u00F3n.",
+      "Price": 74.0,
+      "Stock": 30,
+      "Image": "https://picsum.photos/seed/lampara/800/600"
+    },
+    {
+      "Id": "prd-4",
+      "CategoryId": "cat-2",
+      "Name": "Difusor arom\u00E1tico",
+      "Description": "Ambiente relajante con luces suaves y temporizador.",
+      "Price": 58.75,
+      "Stock": 18,
+      "Image": "https://picsum.photos/seed/difusor/800/600"
+    },
+    {
+      "Id": "prd-5",
+      "CategoryId": "cat-3",
+      "Name": "Cargador r\u00E1pido",
+      "Description": "Carga eficiente para distintos dispositivos m\u00F3viles.",
+      "Price": 39.9,
+      "Stock": 40,
+      "Image": "https://picsum.photos/seed/cargador/800/600"
+    },
+    {
+      "Id": "prd-6",
+      "CategoryId": "cat-3",
+      "Name": "Bolso premium",
+      "Description": "Dise\u00F1o compacto con acabado resistente y vers\u00E1til.",
+      "Price": 96.2,
+      "Stock": 10,
+      "Image": "https://picsum.photos/seed/bolso/800/600"
+    }
+  ]
+}
