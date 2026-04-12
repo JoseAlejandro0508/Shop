@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { buildWhatsAppUrl, formatMoney } from '../../utils/whatsapp';
@@ -9,13 +9,46 @@ export default function AppShell({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith('/admin');
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [checkoutForm, setCheckoutForm] = useState({
+    address: '',
+    currency: 'USD',
+    phone: '',
+  });
+  const [checkoutError, setCheckoutError] = useState('');
 
   const productsById = useMemo(() => buildProductMap(state.products), [state.products]);
   const cartSummary = useMemo(() => buildCartSummary(state.cartItems, productsById), [state.cartItems, productsById]);
-  const whatsappMessage = useMemo(
-    () => buildWhatsAppMessage(state, cartSummary.total, productsById),
-    [state, cartSummary.total, productsById],
-  );
+
+  const openCheckout = () => {
+    if (state.cartItems.length === 0) {
+      return;
+    }
+    setCheckoutError('');
+    setIsCheckoutOpen(true);
+  };
+
+  const closeCheckout = () => {
+    setIsCheckoutOpen(false);
+    setCheckoutError('');
+  };
+
+  const submitCheckout = () => {
+    const payload = {
+      address: checkoutForm.address.trim(),
+      currency: checkoutForm.currency.trim(),
+      phone: checkoutForm.phone.trim(),
+    };
+
+    if (!payload.address || !payload.currency || !payload.phone) {
+      setCheckoutError('Completa todos los campos requeridos para continuar.');
+      return;
+    }
+
+    const whatsappMessage = buildWhatsAppMessage(state, cartSummary.total, productsById, payload);
+    window.open(buildWhatsAppUrl(state.settings.whatsappPhone, whatsappMessage), '_blank', 'noopener,noreferrer');
+    closeCheckout();
+  };
 
   return (
     <div className={`app-shell theme-${state.theme}`}>
@@ -38,7 +71,7 @@ export default function AppShell({ children }) {
           <button type="button" className="theme-toggle" onClick={actions.toggleTheme}>
             {state.theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
           </button>
-          <button type="button" className="cart-button" onClick={actions.toggleCart}>
+          <button type="button" className="cart-button desktop-only" onClick={actions.toggleCart}>
             Carrito - {cartSummary.count}
           </button>
         </nav>
@@ -46,6 +79,13 @@ export default function AppShell({ children }) {
 
       <main className="main-layout">
         {children}
+
+        {!state.isCartOpen && !isCheckoutOpen ? (
+          <button type="button" className="floating-cart-button" onClick={actions.toggleCart} aria-label="Abrir carrito">
+            <span className="floating-cart-icon">🛒</span>
+            <span className="floating-cart-count">{cartSummary.count}</span>
+          </button>
+        ) : null}
 
         <aside className={`cart-drawer ${state.isCartOpen ? 'open' : ''}`}>
           <div className="cart-drawer-header">
@@ -110,13 +150,65 @@ export default function AppShell({ children }) {
             <button
               type="button"
               className="whatsapp-button"
-              onClick={() => window.open(buildWhatsAppUrl(state.settings.whatsappPhone, whatsappMessage), '_blank', 'noopener,noreferrer')}
+              onClick={openCheckout}
               disabled={state.cartItems.length === 0}
             >
-              Enviar por WhatsApp
+              Comprar
             </button>
           </div>
         </aside>
+
+        {isCheckoutOpen ? (
+          <div className="checkout-overlay" onClick={closeCheckout}>
+            <div className="checkout-modal card" onClick={(event) => event.stopPropagation()}>
+              <div className="checkout-header">
+                <h3>Finalizar compra</h3>
+                <button type="button" className="icon-button" onClick={closeCheckout}>
+                  X
+                </button>
+              </div>
+
+              <div className="stack-form">
+                <label className="checkout-field">
+                  <span>Dirección de domicilio *</span>
+                  <input
+                    value={checkoutForm.address}
+                    onChange={(event) => setCheckoutForm((current) => ({ ...current, address: event.target.value }))}
+                    placeholder="Ej: Calle 123, Apto 4, Ciudad"
+                  />
+                </label>
+
+                <label className="checkout-field">
+                  <span>Moneda / Pago *</span>
+                  <select
+                    value={checkoutForm.currency}
+                    onChange={(event) => setCheckoutForm((current) => ({ ...current, currency: event.target.value }))}
+                  >
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="CUP efectivo">CUP efectivo</option>
+                    <option value="CUP transferencia">CUP transferencia</option>
+                  </select>
+                </label>
+
+                <label className="checkout-field">
+                  <span>Teléfono *</span>
+                  <input
+                    value={checkoutForm.phone}
+                    onChange={(event) => setCheckoutForm((current) => ({ ...current, phone: event.target.value }))}
+                    placeholder="Ej: +53 5 123 4567"
+                  />
+                </label>
+
+                {checkoutError ? <p className="notice error">{checkoutError}</p> : null}
+
+                <button type="button" className="primary-button" onClick={submitCheckout}>
+                  Confirmar y enviar por WhatsApp
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </main>
     </div>
   );
