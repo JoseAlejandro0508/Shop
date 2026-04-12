@@ -3,19 +3,32 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { buildWhatsAppUrl, formatMoney } from '../../utils/whatsapp';
 import { buildCartSummary, buildProductMap, buildWhatsAppMessage } from '../../utils/cart';
+import { api } from '../../api/client';
 
 export default function AppShell({ children }) {
   const { state, actions } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = location.pathname.startsWith('/admin');
+  const isHome = location.pathname === '/' || location.pathname === '/home';
+  const isCatalog = location.pathname.startsWith('/catalogo');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [checkoutForm, setCheckoutForm] = useState({
     address: '',
     currency: 'USD',
     phone: '',
   });
   const [checkoutError, setCheckoutError] = useState('');
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [isSendingChat, setIsSendingChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState([
+    {
+      role: 'assistant',
+      content: '¡Hola! Soy el asistente de atención al cliente. ¿En qué puedo ayudarte hoy?'
+    },
+  ]);
 
   const productsById = useMemo(() => buildProductMap(state.products), [state.products]);
   const cartSummary = useMemo(() => buildCartSummary(state.cartItems, productsById), [state.cartItems, productsById]);
@@ -50,26 +63,82 @@ export default function AppShell({ children }) {
     closeCheckout();
   };
 
+  const sendChatMessage = async () => {
+    const text = chatInput.trim();
+    if (!text) return;
+
+    setChatMessages((current) => [...current, { role: 'user', content: text }]);
+    setChatInput('');
+    try {
+      setIsSendingChat(true);
+      const response = await api.supportChat(text);
+      setChatMessages((current) => [...current, { role: 'assistant', content: response.reply }]);
+    } catch (error) {
+      setChatMessages((current) => [
+        ...current,
+        {
+          role: 'assistant',
+          content: `Ahora mismo no pude responder desde IA: ${error.message}. Intenta de nuevo en unos segundos.`,
+        },
+      ]);
+    } finally {
+      setIsSendingChat(false);
+    }
+  };
+
   return (
     <div className={`app-shell theme-${state.theme}`}>
       <header className="topbar">
-        <button type="button" className="brand" onClick={() => navigate('/')}>
-          <span className="brand-mark">T</span>
+        <button type="button" className="brand" onClick={() => navigate('/home')}>
+          <img src={state.settings.logoUrl || '/logo.svg'} alt="Logo tienda" className="brand-logo" />
           <span>
             <strong>{state.settings.storeName}</strong>
-            <small>Catalogo, carrito y WhatsApp</small>
+            <small>Calidad y ofertas para vos</small>
           </span>
         </button>
 
         <nav className="topbar-nav">
-          <button type="button" className={isAdmin ? 'nav-link' : 'nav-link active'} onClick={() => navigate('/')}>
-            Catalogo
+          <button type="button" className="nav-link menu-trigger" onClick={() => setIsMenuOpen((value) => !value)}>
+            Secciones ▾
           </button>
-          <button type="button" className={isAdmin ? 'nav-link active' : 'nav-link'} onClick={() => navigate('/admin')}>
-            Admin
-          </button>
+
+          {isMenuOpen ? (
+            <div className="nav-dropdown">
+              <button
+                type="button"
+                className={isHome ? 'nav-link active' : 'nav-link'}
+                onClick={() => {
+                  navigate('/home');
+                  setIsMenuOpen(false);
+                }}
+              >
+                Home
+              </button>
+              <button
+                type="button"
+                className={isCatalog ? 'nav-link active' : 'nav-link'}
+                onClick={() => {
+                  navigate('/catalogo');
+                  setIsMenuOpen(false);
+                }}
+              >
+                Catálogo
+              </button>
+              <button
+                type="button"
+                className={isAdmin ? 'nav-link active' : 'nav-link'}
+                onClick={() => {
+                  navigate('/admin');
+                  setIsMenuOpen(false);
+                }}
+              >
+                Admin
+              </button>
+            </div>
+          ) : null}
+
           <button type="button" className="theme-toggle" onClick={actions.toggleTheme}>
-            {state.theme === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+            {state.theme === 'dark' ? '🌞 Claro' : '🌙 Oscuro'}
           </button>
           <button type="button" className="cart-button desktop-only" onClick={actions.toggleCart}>
             Carrito - {cartSummary.count}
@@ -84,6 +153,12 @@ export default function AppShell({ children }) {
           <button type="button" className="floating-cart-button" onClick={actions.toggleCart} aria-label="Abrir carrito">
             <span className="floating-cart-icon">🛒</span>
             <span className="floating-cart-count">{cartSummary.count}</span>
+          </button>
+        ) : null}
+
+        {!isChatOpen ? (
+          <button type="button" className="floating-chat-button" onClick={() => setIsChatOpen(true)} aria-label="Abrir chat">
+            💬
           </button>
         ) : null}
 
@@ -206,6 +281,46 @@ export default function AppShell({ children }) {
                   Confirmar y enviar por WhatsApp
                 </button>
               </div>
+            </div>
+          </div>
+        ) : null}
+
+        {isChatOpen ? (
+          <div className="chat-widget card">
+            <div className="chat-header">
+              <div>
+                <strong>Atención al cliente</strong>
+                <small>Asistente virtual</small>
+              </div>
+              <button type="button" className="icon-button" onClick={() => setIsChatOpen(false)}>
+                X
+              </button>
+            </div>
+
+            <div className="chat-messages">
+              {chatMessages.map((message, index) => (
+                <article key={`${message.role}-${index}`} className={`chat-bubble ${message.role}`}>
+                  {message.content}
+                </article>
+              ))}
+            </div>
+
+            <div className="chat-input-row">
+              <input
+                value={chatInput}
+                onChange={(event) => setChatInput(event.target.value)}
+                placeholder="Escribe tu consulta..."
+                disabled={isSendingChat}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    sendChatMessage();
+                  }
+                }}
+              />
+              <button type="button" className="primary-button" onClick={sendChatMessage} disabled={isSendingChat}>
+                {isSendingChat ? 'Enviando...' : 'Enviar'}
+              </button>
             </div>
           </div>
         ) : null}

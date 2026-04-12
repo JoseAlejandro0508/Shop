@@ -1,5 +1,6 @@
 using Microsoft.Extensions.FileProviders;
 using Tienda.Api;
+using Tienda.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,11 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSingleton<StoreService>();
+builder.Services.AddHttpClient<SupportChatService>(client =>
+{
+    client.BaseAddress = new Uri("https://openrouter.ai/api/v1/");
+    client.Timeout = TimeSpan.FromSeconds(45);
+});
 
 var app = builder.Build();
 

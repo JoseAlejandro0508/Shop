@@ -11,7 +11,7 @@ const initialState = {
   adminToken: '',
   isLoadingCatalog: true,
   notice: '',
-  settings: { storeName: 'Nova Market', whatsappPhone: '573001112233', description: '' },
+  settings: { storeName: 'Nova Market', whatsappPhone: '573001112233', description: '', logoUrl: '/logo.svg', supportPrompt: '' },
   categories: [],
   products: [],
   cartItems: [],
@@ -108,11 +108,17 @@ function normalizeSettings(settings) {
     storeName: settings?.storeName ?? 'Nova Market',
     whatsappPhone: settings?.whatsappPhone ?? '',
     description: settings?.description ?? '',
+    logoUrl: settings?.logoUrl || '/logo.svg',
+    supportPrompt:
+      settings?.supportPrompt ??
+      'Responde como asesor de la tienda. Sé amable, claro y orientado a ayudar al cliente a comprar.',
   };
 }
 
 export function AppProvider({ children }) {
   const [state, dispatch] = useReducer(reducer, undefined, readInitialState);
+
+  const getAdminToken = useCallback(() => state.adminToken, [state.adminToken]);
 
   const loadCatalog = useCallback(async () => {
     try {
@@ -184,13 +190,23 @@ export function AppProvider({ children }) {
         const response = await api.uploadProductImage(file, state.adminToken);
         return response.imageUrl;
       },
+      uploadStoreLogo: async (file) => {
+        const response = await api.uploadStoreLogo(file, state.adminToken);
+        return response.imageUrl;
+      },
+      getSupportConfig: async () => {
+        return api.getSupportConfig(state.adminToken);
+      },
+      updateSupportConfig: async (payload) => {
+        await api.updateSupportConfig(payload, state.adminToken);
+      },
       refreshCatalog: loadCatalog,
       addToCart: (id) => dispatch({ type: 'add-to-cart', id }),
       increaseCartItem: (id) => dispatch({ type: 'increase-cart-item', id }),
       decreaseCartItem: (id) => dispatch({ type: 'decrease-cart-item', id }),
       removeFromCart: (id) => dispatch({ type: 'remove-from-cart', id }),
     }),
-    [loadCatalog, state.adminToken],
+    [loadCatalog, state.adminToken, getAdminToken],
   );
 
   const value = useMemo(() => ({ state, actions }), [state, actions]);

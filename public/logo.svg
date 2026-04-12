@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="38" y1="22" x2="470" y2="490" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2D0B61"/>
+      <stop offset="0.45" stop-color="#0E1B52"/>
+      <stop offset="1" stop-color="#0A0F2A"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="98" y1="52" x2="418" y2="448" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#62F9FF"/>
+      <stop offset="0.5" stop-color="#00E6A8"/>
+      <stop offset="1" stop-color="#7A62FF"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="120" y1="130" x2="395" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00F0FF"/>
+      <stop offset="1" stop-color="#2BFFA7"/>
+    </linearGradient>
+    <filter id="glow" x="60" y="10" width="392" height="500" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feFlood flood-opacity="0" result="BackgroundImageFix"/>
+      <feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+      <feGaussianBlur stdDeviation="6" result="effect1_foregroundBlur"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
+
+  <g opacity="0.95" filter="url(#glow)">
+    <path d="M92 188C130 122 195 86 257 86C319 86 383 120 420 184" stroke="url(#ring)" stroke-width="16" stroke-linecap="round"/>
+    <path d="M88 254C126 304 188 336 256 336C324 336 386 303 424 252" stroke="url(#ring)" stroke-width="12" stroke-linecap="round"/>
+    <path d="M98 322C140 380 198 411 256 411C314 411 372 380 414 322" stroke="url(#ring)" stroke-width="10" stroke-linecap="round"/>
+  </g>
+
+  <g>
+    <path d="M180 165C220 150 275 152 328 170C303 209 270 241 234 266C209 245 191 220 180 165Z" fill="url(#accent)"/>
+    <path d="M170 173C178 227 199 264 228 289" stroke="#7CFFF4" stroke-width="8" stroke-linecap="round"/>
+    <path d="M338 177C316 214 286 245 250 269" stroke="#71FFE2" stroke-width="8" stroke-linecap="round"/>
+  </g>
+
+  <g>
+    <text x="256" y="332" text-anchor="middle" fill="#7BFFF3" font-size="66" font-family="Segoe UI, Arial, sans-serif" font-weight="900" letter-spacing="2">PURE</text>
+    <text x="256" y="385" text-anchor="middle" fill="#2DFFC9" font-size="68" font-family="Segoe UI, Arial, sans-serif" font-weight="900" letter-spacing="2">FITNESS</text>
+  </g>
+</svg>

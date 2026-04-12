@@ -18,6 +18,13 @@ public sealed class UploadsController : ControllerBase
 
     [HttpPost("product-image")]
     public async Task<IActionResult> UploadProductImage([FromForm] IFormFile file)
+        => await UploadImage(file);
+
+    [HttpPost("store-logo")]
+    public async Task<IActionResult> UploadStoreLogo([FromForm] IFormFile file)
+        => await UploadImage(file);
+
+    private async Task<IActionResult> UploadImage(IFormFile file)
     {
         if (!AdminAuthHelper.IsAdmin(HttpContext, _store))
         {

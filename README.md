@@ -39,6 +39,35 @@ Target framework del backend: `net10.0`.
 
 Base de datos local: SQLite en `backend/App_Data/store.db`.
 
+### Integración OpenRouter (chat de atención)
+
+Configura estas variables de entorno para activar el chat con IA:
+
+- `OPENROUTER_API_KEY` (obligatoria)
+- `OPENROUTER_MODEL` (opcional, default: `openai/gpt-4o-mini`)
+- `OPENROUTER_SITE_URL` (opcional, default: `http://localhost:5099`)
+- `OPENROUTER_APP_NAME` (opcional, default: nombre de tienda)
+
+Ejemplo PowerShell (sesión actual):
+
+```powershell
+$env:OPENROUTER_API_KEY="tu_api_key"
+$env:OPENROUTER_MODEL="openai/gpt-4o-mini"
+dotnet run --project backend/Tienda.Api.csproj
+```
+
+El endpoint usado por frontend es: `POST /api/support/chat`.
+El system prompt del asistente se toma de la configuración del panel Admin (campo prompt de atención).
+
+También puedes configurar OpenRouter desde el panel Admin > Atención:
+
+- API key
+- Modelo
+- Site URL
+- App Name
+
+Estas credenciales se guardan en SQLite en una tabla privada (`support_config`) y no se exponen en `/api/catalog`.
+
 ### Levantar frontend
 
 ```bash

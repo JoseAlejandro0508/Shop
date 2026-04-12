@@ -71,11 +71,15 @@ public sealed class StoreService
 UPDATE settings
 SET store_name = $store_name,
     whatsapp_phone = $whatsapp_phone,
-    description = $description
+    description = $description,
+    logo_url = $logo_url,
+    support_prompt = $support_prompt
 WHERE id = 1;";
             command.Parameters.AddWithValue("$store_name", settings.StoreName.Trim());
             command.Parameters.AddWithValue("$whatsapp_phone", settings.WhatsappPhone.Trim());
             command.Parameters.AddWithValue("$description", settings.Description.Trim());
+            command.Parameters.AddWithValue("$logo_url", string.IsNullOrWhiteSpace(settings.LogoUrl) ? "/logo.svg" : settings.LogoUrl.Trim());
+            command.Parameters.AddWithValue("$support_prompt", settings.SupportPrompt?.Trim() ?? string.Empty);
             command.ExecuteNonQuery();
         }
     }
@@ -215,6 +219,64 @@ WHERE id = $id;";
         }
     }
 
+    public SupportConfig GetSupportConfig()
+    {
+        lock (_sync)
+        {
+            using var connection = CreateConnection();
+            connection.Open();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
+SELECT openrouter_api_key, openrouter_model, openrouter_site_url, openrouter_app_name
+FROM support_config
+WHERE id = 1
+LIMIT 1;";
+
+            using var reader = command.ExecuteReader();
+            if (!reader.Read())
+            {
+                return new SupportConfig();
+            }
+
+            return new SupportConfig
+            {
+                OpenRouterApiKey = reader.GetString(0),
+                OpenRouterModel = reader.GetString(1),
+                OpenRouterSiteUrl = reader.GetString(2),
+                OpenRouterAppName = reader.GetString(3)
+            };
+        }
+    }
+
+    public void UpdateSupportConfig(SupportConfigUpdateRequest request)
+    {
+        lock (_sync)
+        {
+            using var connection = CreateConnection();
+            connection.Open();
+
+            var current = GetSupportConfig();
+            var apiKey = string.IsNullOrWhiteSpace(request.OpenRouterApiKey)
+                ? current.OpenRouterApiKey
+                : request.OpenRouterApiKey.Trim();
+
+            using var command = connection.CreateCommand();
+            command.CommandText = @"
+UPDATE support_config
+SET openrouter_api_key = $api_key,
+    openrouter_model = $model,
+    openrouter_site_url = $site_url,
+    openrouter_app_name = $app_name
+WHERE id = 1;";
+            command.Parameters.AddWithValue("$api_key", apiKey);
+            command.Parameters.AddWithValue("$model", string.IsNullOrWhiteSpace(request.OpenRouterModel) ? "openai/gpt-4o-mini" : request.OpenRouterModel.Trim());
+            command.Parameters.AddWithValue("$site_url", string.IsNullOrWhiteSpace(request.OpenRouterSiteUrl) ? "http://localhost:5099" : request.OpenRouterSiteUrl.Trim());
+            command.Parameters.AddWithValue("$app_name", string.IsNullOrWhiteSpace(request.OpenRouterAppName) ? "Nova Market" : request.OpenRouterAppName.Trim());
+            command.ExecuteNonQuery();
+        }
+    }
+
     private Product MapProduct(string id, ProductUpsertRequest request)
     {
         return new Product
@@ -234,7 +296,7 @@ WHERE id = $id;";
     private StoreSettings ReadSettings(SqliteConnection connection)
     {
         using var command = connection.CreateCommand();
-        command.CommandText = "SELECT store_name, whatsapp_phone, description FROM settings WHERE id = 1 LIMIT 1;";
+        command.CommandText = "SELECT store_name, whatsapp_phone, description, logo_url, support_prompt FROM settings WHERE id = 1 LIMIT 1;";
         using var reader = command.ExecuteReader();
 
         if (!reader.Read())
@@ -246,7 +308,9 @@ WHERE id = $id;";
         {
             StoreName = reader.GetString(0),
             WhatsappPhone = reader.GetString(1),
-            Description = reader.GetString(2)
+            Description = reader.GetString(2),
+            LogoUrl = reader.GetString(3),
+            SupportPrompt = reader.GetString(4)
         };
     }
 
@@ -339,7 +403,9 @@ CREATE TABLE IF NOT EXISTS settings (
     id INTEGER PRIMARY KEY CHECK (id = 1),
     store_name TEXT NOT NULL,
     whatsapp_phone TEXT NOT NULL,
-    description TEXT NOT NULL
+    description TEXT NOT NULL,
+    logo_url TEXT NOT NULL DEFAULT '/logo.svg',
+    support_prompt TEXT NOT NULL DEFAULT ''
 );
 
 CREATE TABLE IF NOT EXISTS categories (
@@ -358,8 +424,38 @@ CREATE TABLE IF NOT EXISTS products (
     image TEXT NOT NULL,
     FOREIGN KEY(category_id) REFERENCES categories(id)
 );
+
+CREATE TABLE IF NOT EXISTS support_config (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    openrouter_api_key TEXT NOT NULL,
+    openrouter_model TEXT NOT NULL,
+    openrouter_site_url TEXT NOT NULL,
+    openrouter_app_name TEXT NOT NULL
+);
 ";
             command.ExecuteNonQuery();
+
+            using var alterCommand = connection.CreateCommand();
+            alterCommand.CommandText = "ALTER TABLE settings ADD COLUMN support_prompt TEXT NOT NULL DEFAULT '';";
+            try
+            {
+                alterCommand.ExecuteNonQuery();
+            }
+            catch
+            {
+                // Columna ya existe
+            }
+
+            using var alterLogoCommand = connection.CreateCommand();
+            alterLogoCommand.CommandText = "ALTER TABLE settings ADD COLUMN logo_url TEXT NOT NULL DEFAULT '/logo.svg';";
+            try
+            {
+                alterLogoCommand.ExecuteNonQuery();
+            }
+            catch
+            {
+                // Columna ya existe
+            }
 
             SeedIfEmpty(connection);
         }
@@ -389,6 +485,27 @@ VALUES (1, $store_name, $whatsapp_phone, $description);";
             settingsCmd.ExecuteNonQuery();
         }
 
+        using (var promptCmd = connection.CreateCommand())
+        {
+            promptCmd.Transaction = tx;
+            promptCmd.CommandText = @"
+UPDATE settings
+SET support_prompt = $support_prompt
+WHERE id = 1 AND (support_prompt IS NULL OR support_prompt = '');";
+            promptCmd.Parameters.AddWithValue("$support_prompt", "Responde como asesor de la tienda. Sé amable, claro y orientado a ayudar al cliente a comprar.");
+            promptCmd.ExecuteNonQuery();
+        }
+
+        using (var logoCmd = connection.CreateCommand())
+        {
+            logoCmd.Transaction = tx;
+            logoCmd.CommandText = @"
+UPDATE settings
+SET logo_url = '/logo.svg'
+WHERE id = 1 AND (logo_url IS NULL OR logo_url = '');";
+            logoCmd.ExecuteNonQuery();
+        }
+
         if (Count(connection, "categories") == 0)
         {
             InsertCategory(connection, tx, "cat-1", "Tecnología", "tecnologia");
@@ -404,6 +521,23 @@ VALUES (1, $store_name, $whatsapp_phone, $description);";
             InsertProduct(connection, tx, "prd-4", "cat-2", "Difusor aromático", "Ambiente relajante con luces suaves y temporizador.", 58.75m, 18, "https://picsum.photos/seed/difusor/800/600");
             InsertProduct(connection, tx, "prd-5", "cat-3", "Cargador rápido", "Carga eficiente para distintos dispositivos móviles.", 39.9m, 40, "https://picsum.photos/seed/cargador/800/600");
             InsertProduct(connection, tx, "prd-6", "cat-3", "Bolso premium", "Diseño compacto con acabado resistente y versátil.", 96.2m, 10, "https://picsum.photos/seed/bolso/800/600");
+        }
+
+        if (Count(connection, "support_config") == 0)
+        {
+            var defaultApiKey = Environment.GetEnvironmentVariable("OPENROUTER_API_KEY")
+                ?? "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";
+
+            using var supportCmd = connection.CreateCommand();
+            supportCmd.Transaction = tx;
+            supportCmd.CommandText = @"
+INSERT INTO support_config (id, openrouter_api_key, openrouter_model, openrouter_site_url, openrouter_app_name)
+VALUES (1, $api_key, $model, $site_url, $app_name);";
+            supportCmd.Parameters.AddWithValue("$api_key", defaultApiKey);
+            supportCmd.Parameters.AddWithValue("$model", "openai/gpt-4o-mini");
+            supportCmd.Parameters.AddWithValue("$site_url", "http://localhost:5099");
+            supportCmd.Parameters.AddWithValue("$app_name", "Nova Market");
+            supportCmd.ExecuteNonQuery();
         }
 
         tx.Commit();

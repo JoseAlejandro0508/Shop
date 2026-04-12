@@ -63,11 +63,15 @@ export default function AdminPage() {
         <button type="button" className={tab === 'products' ? 'chip active' : 'chip'} onClick={() => setTab('products')}>
           Productos
         </button>
+        <button type="button" className={tab === 'support' ? 'chip active' : 'chip'} onClick={() => setTab('support')}>
+          Atención
+        </button>
       </div>
 
       {tab === 'settings' ? <SettingsPanel /> : null}
       {tab === 'categories' ? <CategoriesPanel /> : null}
       {tab === 'products' ? <ProductsPanel /> : null}
+      {tab === 'support' ? <SupportPanel /> : null}
     </section>
   );
 }
@@ -111,6 +115,44 @@ function SettingsPanel() {
           placeholder="Numero de WhatsApp"
         />
       </div>
+
+      <div className="form-grid">
+        <input
+          value={form.logoUrl || ''}
+          onChange={(event) => setForm((current) => ({ ...current, logoUrl: event.target.value }))}
+          placeholder="URL del logo"
+        />
+        <label className="secondary-button" style={{ display: 'inline-flex', justifyContent: 'center', cursor: 'pointer' }}>
+          Subir logo
+          <input
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={async (event) => {
+              const file = event.target.files?.[0];
+              if (!file) return;
+
+              try {
+                setSaving(true);
+                const imageUrl = await actions.uploadStoreLogo(file);
+                setForm((current) => ({ ...current, logoUrl: imageUrl }));
+                setMessage('Logo subido correctamente. Guarda configuración para aplicarlo.');
+              } catch (error) {
+                setMessage(`No se pudo subir el logo: ${error.message}`);
+              } finally {
+                setSaving(false);
+                event.target.value = '';
+              }
+            }}
+          />
+        </label>
+      </div>
+
+      <div className="logo-preview-wrap">
+        <p className="eyebrow">Vista previa de logo</p>
+        <img src={form.logoUrl || '/logo.svg'} alt="Vista previa logo" className="logo-preview" />
+      </div>
+
       <textarea
         value={form.description}
         onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
@@ -386,4 +428,106 @@ function createEmptyProduct(categoryId) {
     image: '',
     categoryId,
   };
+}
+
+function SupportPanel() {
+  const { state, actions } = useApp();
+  const [prompt, setPrompt] = useState(state.settings.supportPrompt || '');
+  const [llmConfig, setLlmConfig] = useState({
+    openRouterApiKey: '',
+    openRouterModel: 'openai/gpt-4o-mini',
+    openRouterSiteUrl: 'http://localhost:5099',
+    openRouterAppName: state.settings.storeName || 'Nova Market',
+    openRouterApiKeyMasked: '',
+  });
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    setPrompt(state.settings.supportPrompt || '');
+  }, [state.settings.supportPrompt]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadConfig = async () => {
+      try {
+        const response = await actions.getSupportConfig();
+        if (!isMounted) return;
+        setLlmConfig((current) => ({
+          ...current,
+          openRouterApiKeyMasked: response.openRouterApiKeyMasked || '',
+          openRouterModel: response.openRouterModel || 'openai/gpt-4o-mini',
+          openRouterSiteUrl: response.openRouterSiteUrl || 'http://localhost:5099',
+          openRouterAppName: response.openRouterAppName || state.settings.storeName || 'Nova Market',
+        }));
+      } catch {
+        // Silencioso en UI
+      }
+    };
+
+    loadConfig();
+    return () => {
+      isMounted = false;
+    };
+  }, [actions, state.settings.storeName]);
+
+  return (
+    <form
+      className="admin-panel card"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        try {
+          setSaving(true);
+          await actions.updateSettings({ ...state.settings, supportPrompt: prompt });
+          await actions.updateSupportConfig({
+            openRouterApiKey: llmConfig.openRouterApiKey,
+            openRouterModel: llmConfig.openRouterModel,
+            openRouterSiteUrl: llmConfig.openRouterSiteUrl,
+            openRouterAppName: llmConfig.openRouterAppName,
+          });
+          setLlmConfig((current) => ({ ...current, openRouterApiKey: '' }));
+          setMessage('Prompt y configuración OpenRouter guardados.');
+        } catch (error) {
+          setMessage(`No se pudo guardar la configuración: ${error.message}`);
+        } finally {
+          setSaving(false);
+        }
+      }}
+    >
+      <h2>Prompt del agente de atención</h2>
+      <p className="eyebrow">Configura el mensaje base que utilizará el asistente de atención al cliente.</p>
+      <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} placeholder="Ej: Responde de forma amable, breve y orientada a cerrar ventas..." />
+
+      <h3>OpenRouter</h3>
+      <div className="form-grid">
+        <input
+          type="password"
+          value={llmConfig.openRouterApiKey}
+          onChange={(event) => setLlmConfig((current) => ({ ...current, openRouterApiKey: event.target.value }))}
+          placeholder={llmConfig.openRouterApiKeyMasked ? `Actual: ${llmConfig.openRouterApiKeyMasked}` : 'API key de OpenRouter'}
+        />
+        <input
+          value={llmConfig.openRouterModel}
+          onChange={(event) => setLlmConfig((current) => ({ ...current, openRouterModel: event.target.value }))}
+          placeholder="Modelo OpenRouter"
+        />
+        <input
+          value={llmConfig.openRouterSiteUrl}
+          onChange={(event) => setLlmConfig((current) => ({ ...current, openRouterSiteUrl: event.target.value }))}
+          placeholder="Site URL"
+        />
+        <input
+          value={llmConfig.openRouterAppName}
+          onChange={(event) => setLlmConfig((current) => ({ ...current, openRouterAppName: event.target.value }))}
+          placeholder="App Name"
+        />
+      </div>
+
+      <button type="submit" className="primary-button" disabled={saving}>
+        {saving ? 'Guardando...' : 'Guardar prompt'}
+      </button>
+      {message ? <p className="notice">{message}</p> : null}
+    </form>
+  );
 }

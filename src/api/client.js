@@ -83,4 +83,31 @@ export const api = {
       body: formData,
     });
   },
+  uploadStoreLogo: async (file, token) => {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    return request('/uploads/store-logo', {
+      method: 'POST',
+      headers: authHeaders(token),
+      body: formData,
+    });
+  },
+  supportChat: (message) =>
+    request('/support/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+    }),
+  getSupportConfig: (token) =>
+    request('/admin/support-config', {
+      method: 'GET',
+      headers: authHeaders(token),
+    }),
+  updateSupportConfig: (payload, token) =>
+    request('/admin/support-config', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', ...authHeaders(token) },
+      body: JSON.stringify(payload),
+    }),
 };

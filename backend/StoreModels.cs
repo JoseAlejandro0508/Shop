@@ -12,6 +12,8 @@ public sealed class StoreSettings
     public string StoreName { get; set; } = "Nova Market";
     public string WhatsappPhone { get; set; } = "573001112233";
     public string Description { get; set; } = "Catálogo configurable con carrito y pedidos por WhatsApp.";
+    public string LogoUrl { get; set; } = "/logo.svg";
+    public string SupportPrompt { get; set; } = "Responde como asesor de la tienda. Sé amable, claro y orientado a ayudar al cliente a comprar.";
 }
 
 public sealed class Category
@@ -51,4 +53,25 @@ public sealed class ProductUpsertRequest
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public string Image { get; set; } = string.Empty;
+}
+
+public sealed class SupportChatRequest
+{
+    public string Message { get; set; } = string.Empty;
+}
+
+public sealed class SupportConfig
+{
+    public string OpenRouterApiKey { get; set; } = string.Empty;
+    public string OpenRouterModel { get; set; } = "openai/gpt-4o-mini";
+    public string OpenRouterSiteUrl { get; set; } = "http://localhost:5099";
+    public string OpenRouterAppName { get; set; } = "Nova Market";
+}
+
+public sealed class SupportConfigUpdateRequest
+{
+    public string OpenRouterApiKey { get; set; } = string.Empty;
+    public string OpenRouterModel { get; set; } = "openai/gpt-4o-mini";
+    public string OpenRouterSiteUrl { get; set; } = "http://localhost:5099";
+    public string OpenRouterAppName { get; set; } = "Nova Market";
 }
