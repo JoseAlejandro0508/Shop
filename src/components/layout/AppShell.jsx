@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useApp } from '../../context/AppContext';
 import { buildWhatsAppUrl, formatMoney } from '../../utils/whatsapp';
 import { buildCartSummary, buildProductMap, buildWhatsAppMessage } from '../../utils/cart';
 import { api } from '../../api/client';
+import { Menu, MoonStar, SunMedium, ShoppingCart, MessageCircle, X, SendHorizontal } from 'lucide-react';
 
 export default function AppShell({ children }) {
   const { state, actions } = useApp();
@@ -14,6 +15,7 @@ export default function AppShell({ children }) {
   const isCatalog = location.pathname.startsWith('/catalogo');
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navRef = useRef(null);
   const [checkoutForm, setCheckoutForm] = useState({
     address: '',
     currency: 'USD',
@@ -86,6 +88,22 @@ export default function AppShell({ children }) {
     }
   };
 
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleOutsideClick = (event) => {
+      if (!navRef.current) return;
+      if (!navRef.current.contains(event.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
+
   return (
     <div className={`app-shell theme-${state.theme}`}>
       <header className="topbar">
@@ -97,13 +115,14 @@ export default function AppShell({ children }) {
           </span>
         </button>
 
-        <nav className="topbar-nav">
-          <button type="button" className="nav-link menu-trigger" onClick={() => setIsMenuOpen((value) => !value)}>
-            Secciones ▾
+        <nav className="topbar-nav" ref={navRef}>
+          <button type="button" className="nav-link menu-trigger" onClick={() => setIsMenuOpen((value) => !value)} aria-label="Abrir menú">
+            <Menu size={17} />
+            <span>Secciones</span>
           </button>
 
           {isMenuOpen ? (
-            <div className="nav-dropdown">
+            <div className="nav-dropdown nav-dropdown-animated">
               <button
                 type="button"
                 className={isHome ? 'nav-link active' : 'nav-link'}
@@ -137,8 +156,9 @@ export default function AppShell({ children }) {
             </div>
           ) : null}
 
-          <button type="button" className="theme-toggle" onClick={actions.toggleTheme}>
-            {state.theme === 'dark' ? '🌞 Claro' : '🌙 Oscuro'}
+          <button type="button" className="theme-toggle modern-theme-toggle" onClick={actions.toggleTheme}>
+            {state.theme === 'dark' ? <SunMedium size={16} /> : <MoonStar size={16} />}
+            <span>{state.theme === 'dark' ? 'Claro' : 'Oscuro'}</span>
           </button>
           <button type="button" className="cart-button desktop-only" onClick={actions.toggleCart}>
             Carrito - {cartSummary.count}
@@ -151,14 +171,14 @@ export default function AppShell({ children }) {
 
         {!state.isCartOpen && !isCheckoutOpen ? (
           <button type="button" className="floating-cart-button" onClick={actions.toggleCart} aria-label="Abrir carrito">
-            <span className="floating-cart-icon">🛒</span>
+            <span className="floating-cart-icon"><ShoppingCart size={18} /></span>
             <span className="floating-cart-count">{cartSummary.count}</span>
           </button>
         ) : null}
 
         {!isChatOpen ? (
           <button type="button" className="floating-chat-button" onClick={() => setIsChatOpen(true)} aria-label="Abrir chat">
-            💬
+            <MessageCircle size={18} />
           </button>
         ) : null}
 
@@ -169,7 +189,7 @@ export default function AppShell({ children }) {
               <h2>Carrito</h2>
             </div>
             <button type="button" className="icon-button" onClick={actions.toggleCart}>
-              X
+              <X size={16} />
             </button>
           </div>
 
@@ -239,7 +259,7 @@ export default function AppShell({ children }) {
               <div className="checkout-header">
                 <h3>Finalizar compra</h3>
                 <button type="button" className="icon-button" onClick={closeCheckout}>
-                  X
+                  <X size={16} />
                 </button>
               </div>
 
@@ -293,7 +313,7 @@ export default function AppShell({ children }) {
                 <small>Asistente virtual</small>
               </div>
               <button type="button" className="icon-button" onClick={() => setIsChatOpen(false)}>
-                X
+                <X size={16} />
               </button>
             </div>
 
@@ -319,7 +339,7 @@ export default function AppShell({ children }) {
                 }}
               />
               <button type="button" className="primary-button" onClick={sendChatMessage} disabled={isSendingChat}>
-                {isSendingChat ? 'Enviando...' : 'Enviar'}
+                {isSendingChat ? 'Enviando...' : <SendHorizontal size={16} />}
               </button>
             </div>
           </div>

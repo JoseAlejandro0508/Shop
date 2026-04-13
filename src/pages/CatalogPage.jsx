@@ -6,6 +6,7 @@ export default function CatalogPage() {
   const { state, actions } = useApp();
   const [query, setQuery] = useState('');
   const [activeCategoryId, setActiveCategoryId] = useState('all');
+  const [expandedProductId, setExpandedProductId] = useState(null);
 
   const categoriesById = useMemo(() => {
     const map = new Map();
@@ -91,15 +92,22 @@ export default function CatalogPage() {
           const category = categoriesById.get(product.categoryId);
 
           return (
-            <article key={product.id} className="product-card card">
-              <img src={product.image} alt={product.name} />
+            <article key={product.id} className={`product-card card ${expandedProductId === product.id ? 'expanded' : ''}`}>
+              <button
+                type="button"
+                className="product-image-button"
+                onClick={() => setExpandedProductId((current) => (current === product.id ? null : product.id))}
+                aria-label={`Ver detalle de ${product.name}`}
+              >
+                <img src={product.image} alt={product.name} />
+              </button>
               <div className="product-content">
                 <div className="product-meta">
                   <span>{category?.name || 'Sin categoria'}</span>
                   <strong>{formatMoney(product.price)}</strong>
                 </div>
                 <h3>{product.name}</h3>
-                <p>{product.description}</p>
+                <p className={expandedProductId === product.id ? 'product-description expanded' : 'product-description'}>{product.description}</p>
                 <div className="product-footer">
                   <span>Disponibles: {product.stock}</span>
                   <button

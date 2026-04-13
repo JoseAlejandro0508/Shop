@@ -142,6 +142,7 @@ export function AppProvider({ children }) {
       }),
     );
     document.documentElement.dataset.theme = state.theme;
+    document.documentElement.classList.toggle('dark', state.theme === 'dark');
   }, [state]);
 
   useEffect(() => {
