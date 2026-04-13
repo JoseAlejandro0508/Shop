@@ -1,0 +1,6 @@
+# Evita mandar basura al contexto docker (build más rápido y limpio
+.git
+node_modules
+dist
+backend/bin
+backend/obj

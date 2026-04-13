@@ -1,0 +1,31 @@
+# Crea/edita archivo principal que levanta backend + frontend
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: shop-backend
+    restart: unless-stopped
+    volumes:
+      - backend_data:/app/App_Data
+      - backend_uploads:/app/uploads
+    # Volúmenes persistentes:
+    # App_Data => SQLite
+    # uploads => imágenes/logo/productos
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: shop-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "8447:80"
+    # Expone sitio público en puerto 80 del VPS
+
+volumes:
+  backend_data:
+  backend_uploads:
+  # Declaración de volúmenes persistentes docker

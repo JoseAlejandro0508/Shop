@@ -29,14 +29,17 @@ export default function HomePage() {
         </div>
 
         <div className="home-content">
+          <p className="home-kicker">Temporada 2026</p>
           <img src={state.settings.logoUrl || '/logo.svg'} alt="Logo de la tienda" className="home-logo" />
           <p className="home-tagline">{state.settings.storeName}</p>
           <h1>{state.settings.description || 'Los mejores productos de calidad a tu disposición.'}</h1>
           <p className="home-subtitle">Calidad, bajo costo y atención al cliente.</p>
 
-          <button type="button" className="home-cta" onClick={() => navigate('/catalogo')}>
-            Ver ofertas
-          </button>
+          <div className="home-cta-row">
+            <button type="button" className="home-cta" onClick={() => navigate('/catalogo')}>
+              Ver ofertas
+            </button>
+          </div>
 
           <div className="home-badges" aria-hidden="true">
             {floatingBadges.map((item, index) => (

@@ -66,6 +66,9 @@ export default function CatalogPage() {
 
       <section className="catalog-toolbar card">
         <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Buscar productos" />
+        <div className="catalog-results-pill">
+          {filteredProducts.length} resultado{filteredProducts.length === 1 ? '' : 's'}
+        </div>
         <div className="chips">
           <button type="button" className={activeCategoryId === 'all' ? 'chip active' : 'chip'} onClick={() => setActiveCategoryId('all')}>
             Todas

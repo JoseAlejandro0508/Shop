@@ -40,7 +40,7 @@ body,
 }
 
 body {
-  font-family: 'Segoe UI Variable Display', 'Segoe UI Variable', 'Segoe UI', sans-serif;
+  font-family: 'Manrope', 'Segoe UI', sans-serif;
   background:
     radial-gradient(circle at top left, rgba(255, 153, 0, 0.18), transparent 34%),
     radial-gradient(circle at bottom right, rgba(0, 168, 91, 0.15), transparent 28%),
@@ -114,7 +114,9 @@ img {
 
 .brand strong {
   display: block;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
 }
 
 .brand small {
@@ -141,6 +143,7 @@ img {
   color: var(--text);
   border-radius: 999px;
   padding: 0.65rem 0.88rem;
+  font-weight: 700;
   transition: transform 160ms ease, border-color 160ms ease, background 160ms ease;
 }
 
@@ -191,7 +194,7 @@ img {
 .page {
   width: min(100% - 1rem, 1200px);
   margin: 0 auto;
-  padding: 0.9rem 0 2.6rem;
+  padding: 1rem 0 2.9rem;
 }
 
 .card,
@@ -278,8 +281,17 @@ img {
 .home-content {
   position: relative;
   z-index: 2;
-  padding: 1.2rem;
+  padding: 1.35rem;
   width: min(760px, 100%);
+}
+
+.home-kicker {
+  margin: 0;
+  color: #ffc37b;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.74rem;
+  font-weight: 800;
 }
 
 .home-logo {
@@ -290,25 +302,35 @@ img {
 }
 
 .home-tagline {
-  margin: 0;
+  margin: 0.35rem 0 0;
   color: #8bf4ff;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.17em;
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: 800;
+  font-size: 0.8rem;
 }
 
 .home-page h1 {
-  margin: 0.7rem auto;
-  font-size: clamp(1.45rem, 5vw, 3rem);
+  margin: 0.7rem auto 0.5rem;
+  font-family: 'Bebas Neue', 'Manrope', sans-serif;
+  letter-spacing: 0.03em;
+  font-size: clamp(2.1rem, 9vw, 5.2rem);
   line-height: 1.1;
-  max-width: 20ch;
+  max-width: 16ch;
 }
 
 .home-subtitle {
   margin: 0 auto 1rem;
   color: var(--muted);
-  font-size: clamp(1rem, 2.7vw, 1.15rem);
+  font-size: clamp(0.95rem, 2.7vw, 1.12rem);
   max-width: 34ch;
+}
+
+.home-cta-row {
+  display: flex;
+  gap: 0.55rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .home-cta {
@@ -350,6 +372,8 @@ img {
 .auth-card h1,
 .admin-header h1 {
   margin-top: 0;
+  font-family: 'Bebas Neue', 'Manrope', sans-serif;
+  letter-spacing: 0.03em;
   font-size: clamp(1.3rem, 4.8vw, 2.6rem);
   line-height: 1.12;
 }
@@ -376,6 +400,17 @@ img {
   gap: 0.85rem;
   padding: 0.8rem;
   margin-top: 0.8rem;
+}
+
+.catalog-results-pill {
+  justify-self: start;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .catalog-toolbar input,
@@ -409,6 +444,12 @@ img {
 
 .product-card {
   overflow: hidden;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.25);
 }
 
 .product-card img,
@@ -424,7 +465,8 @@ img {
 
 .product-content h3 {
   margin: 0.3rem 0 0.4rem;
-  font-size: 1rem;
+  font-size: 1.03rem;
+  font-weight: 800;
 }
 
 .product-content p {
@@ -457,6 +499,7 @@ img {
   background: linear-gradient(135deg, var(--primary), var(--primary-strong));
   color: #111;
   font-weight: 800;
+  letter-spacing: 0.01em;
   box-shadow: var(--shadow);
 }
 
@@ -732,13 +775,13 @@ textarea {
   max-width: 90%;
   border-radius: 0.9rem;
   padding: 0.6rem 0.75rem;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   line-height: 1.35;
 }
 
 .chat-bubble.assistant {
   justify-self: start;
-  background: rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(20, 184, 166, 0.12));
   border: 1px solid var(--border);
 }
 
@@ -762,6 +805,10 @@ textarea {
 @media (min-width: 760px) {
   .page {
     width: min(1200px, calc(100% - 2rem));
+  }
+
+  .home-content {
+    padding: 2rem;
   }
 
   .hero {
@@ -803,6 +850,10 @@ textarea {
 
   .product-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .home-page h1 {
+    max-width: 13ch;
   }
 
   .cart-drawer {
