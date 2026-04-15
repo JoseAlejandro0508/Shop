@@ -7,9 +7,9 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-primary text-primary-foreground hover:brightness-110',
-        outline: 'border border-border bg-card text-foreground hover:bg-accent hover:text-accent-foreground',
-        ghost: 'text-foreground hover:bg-accent hover:text-accent-foreground',
+        default: 'bg-[var(--app-primary)] text-[var(--text)] hover:brightness-110',
+        outline: 'border border-[var(--app-border)] bg-[var(--surface)] text-[var(--text)] hover:bg-[var(--surface-strong)]',
+        ghost: 'text-[var(--text)] hover:bg-[var(--surface-strong)]',
       },
       size: {
         default: 'h-10 px-4 py-2',
@@ -31,3 +31,4 @@ const Button = React.forwardRef(({ className, variant, size, ...props }, ref) =>
 Button.displayName = 'Button';
 
 export { Button, buttonVariants };
+
